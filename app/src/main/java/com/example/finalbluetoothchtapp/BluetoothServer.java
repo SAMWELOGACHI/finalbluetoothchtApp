@@ -32,6 +32,7 @@ public class BluetoothServer extends Thread {
             } catch (IOException e) {
                 break;
             }
+
             if (socket != null) {
                 try {
                     ChatConnection conn = new ChatConnection(socket);
@@ -39,11 +40,23 @@ public class BluetoothServer extends Thread {
 
                     // Launch ChatActivity
                     Intent intent = new Intent(context, ChatActivity.class);
+                    if (socket.getRemoteDevice() != null) {
+                        try {
+                            intent.putExtra("device_name", socket.getRemoteDevice().getName());
+                        } catch (SecurityException e) {
+                            // Ignore if permission missing, though it should be there
+                        }
+                    }
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     context.startActivity(intent);
 
                 } catch (IOException e) {
                     e.printStackTrace();
+                    try {
+                        socket.close();
+                    } catch (IOException ioException) {
+                        ioException.printStackTrace();
+                    }
                 }
                 break; // stop after one connection
             }
@@ -51,6 +64,9 @@ public class BluetoothServer extends Thread {
     }
 
     public void cancel() {
-        try { serverSocket.close(); } catch (IOException ignored) {}
+        try {
+            serverSocket.close();
+        } catch (IOException ignored) {
+        }
     }
 }
