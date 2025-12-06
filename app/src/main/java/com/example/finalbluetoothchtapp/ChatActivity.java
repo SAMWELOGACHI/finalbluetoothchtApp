@@ -3,7 +3,8 @@ package com.example.finalbluetoothchtapp;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -18,6 +19,7 @@ public class ChatActivity extends AppCompatActivity {
     private ChatAdapter chatAdapter;
     private final List<Message> messages = new ArrayList<>();
     private ChatConnection connection;
+    private Thread readThread;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,12 +28,12 @@ public class ChatActivity extends AppCompatActivity {
 
         RecyclerView recyclerView = findViewById(R.id.rvMessages);
         EditText input = findViewById(R.id.etMessage);
-        View sendBtn = findViewById(R.id.btnSend); // Changed to View or ImageView
+        View sendBtn = findViewById(R.id.btnSend);
         View backBtn = findViewById(R.id.btnBack);
-        android.widget.TextView tvTitle = findViewById(R.id.tvChatTitle);
+        TextView tvTitle = findViewById(R.id.tvChatTitle);
 
         String deviceName = getIntent().getStringExtra("device_name");
-        if (deviceName != null && tvTitle != null) {
+        if (deviceName != null) {
             tvTitle.setText("Connected to " + deviceName);
         }
 
@@ -47,61 +49,57 @@ public class ChatActivity extends AppCompatActivity {
 
         // Listen for incoming messages
         if (connection != null) {
-            new Thread(() -> {
+            readThread = new Thread(() -> {
                 try {
                     String msg;
-                    while ((msg = connection.readLine()) != null) {
+                    while (!Thread.currentThread().isInterrupted() &&
+                            (msg = connection.readLine()) != null) {
                         Message message = new Message(msg, false); // Peer message
                         runOnUiThread(() -> {
                             messages.add(message);
                             chatAdapter.notifyItemInserted(messages.size() - 1);
-                            recyclerView.scrollToPosition(messages.size() - 1);
+                            recyclerView.smoothScrollToPosition(messages.size() - 1);
                         });
                     }
                 } catch (IOException e) {
-                    e.printStackTrace();
                     runOnUiThread(() -> {
-                        android.widget.Toast
-                                .makeText(ChatActivity.this, "Connection lost", android.widget.Toast.LENGTH_SHORT)
-                                .show();
+                        Toast.makeText(ChatActivity.this, "Connection lost", Toast.LENGTH_SHORT).show();
                         finish();
                     });
                 }
-            }).start();
+            });
+            readThread.start();
         }
 
         // Send button
-        sendBtn.setOnClickListener(v -> {
-            String text = input.getText().toString().trim();
-            if (!text.isEmpty()) {
-                if (connection != null) {
+        if (sendBtn != null) {
+            sendBtn.setOnClickListener(v -> {
+                String text = input.getText().toString().trim();
+                if (!text.isEmpty() && connection != null) {
                     try {
                         connection.writeLine(text);
                         Message message = new Message(text, true); // Me message
                         messages.add(message);
                         chatAdapter.notifyItemInserted(messages.size() - 1);
-                        recyclerView.scrollToPosition(messages.size() - 1);
+                        recyclerView.smoothScrollToPosition(messages.size() - 1);
                         input.setText("");
                     } catch (IOException e) {
-                        e.printStackTrace();
-                        android.widget.Toast
-                                .makeText(ChatActivity.this, "Failed to send", android.widget.Toast.LENGTH_SHORT)
-                                .show();
+                        Toast.makeText(ChatActivity.this, "Failed to send", Toast.LENGTH_SHORT).show();
                     }
                 }
-            }
-        });
+            });
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (readThread != null) readThread.interrupt();
         if (connection != null) {
             try {
                 connection.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            } catch (IOException ignored) {}
+            ChatHolder.connection = null;
         }
     }
 }

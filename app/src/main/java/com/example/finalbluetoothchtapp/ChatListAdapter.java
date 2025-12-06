@@ -28,13 +28,18 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ChatVi
     @NonNull
     @Override
     public ChatViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_chat_list, parent, false);
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_chat_list, parent, false);
         return new ChatViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ChatViewHolder holder, int position) {
-        holder.bind(chats.get(position), listener);
+        ChatSession chat = chats.get(position);
+        holder.bind(chat);
+
+        // Handle click once here
+        holder.itemView.setOnClickListener(v -> listener.onChatClick(chat));
     }
 
     @Override
@@ -57,11 +62,11 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ChatVi
             viewOnlineStatus = itemView.findViewById(R.id.viewOnlineStatus);
         }
 
-        public void bind(ChatSession chat, OnChatClickListener listener) {
-            tvName.setText(chat.getName());
-            tvLastMessage.setText(chat.getLastMessage());
-            tvTime.setText(chat.getTime());
-            
+        public void bind(ChatSession chat) {
+            tvName.setText(chat.getName() != null ? chat.getName() : "Unknown");
+            tvLastMessage.setText(chat.getLastMessage() != null ? chat.getLastMessage() : "");
+            tvTime.setText(chat.getTime() != null ? chat.getTime() : "");
+
             if (chat.getUnreadCount() > 0) {
                 tvBadge.setVisibility(View.VISIBLE);
                 tvBadge.setText(String.valueOf(chat.getUnreadCount()));
@@ -71,17 +76,18 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ChatVi
 
             viewOnlineStatus.setVisibility(chat.isOnline() ? View.VISIBLE : View.GONE);
 
-            itemView.setOnClickListener(v -> listener.onChatClick(chat));
+            // Avatar placeholder
+            ivAvatar.setImageResource(R.drawable.bg_avatar_placeholder);
         }
     }
-    
+
     // Simple data model for chat session
     public static class ChatSession {
-        private String name;
-        private String lastMessage;
-        private String time;
-        private int unreadCount;
-        private boolean isOnline;
+        private final String name;
+        private final String lastMessage;
+        private final String time;
+        private final int unreadCount;
+        private final boolean isOnline;
 
         public ChatSession(String name, String lastMessage, String time, int unreadCount, boolean isOnline) {
             this.name = name;

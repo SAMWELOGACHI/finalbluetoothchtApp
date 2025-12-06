@@ -23,8 +23,8 @@ public class ChatConnection {
         return reader.readLine();
     }
 
-    public void writeLine(String msg) throws IOException {
-        writer.println(msg);
+    public void writeLine(String line) throws IOException {
+        writer.println(line);
     }
 
     public void close() throws IOException {

@@ -20,7 +20,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
 
     @Override
     public int getItemViewType(int position) {
-        // Decide which layout to use based on sender
+        // 0 = Me, 1 = Peer
         return messages.get(position).isMe() ? 0 : 1;
     }
 
@@ -29,11 +29,9 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
     public ChatViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view;
         if (viewType == 0) {
-            // Me bubble
             view = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.item_message_me, parent, false);
         } else {
-            // Peer bubble
             view = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.item_message_peer, parent, false);
         }
