@@ -25,28 +25,25 @@ public class BluetoothClient {
     }
 
     @RequiresPermission(Manifest.permission.BLUETOOTH_SCAN)
-    public void connect(OnConnectedListener listener) {
-        new Thread(() -> {
-            try {
-                // ✅ Use shared UUID
-                socket = device.createRfcommSocketToServiceRecord(ChatHolder.APP_UUID);
+    public BluetoothSocket connect() {
+        try {
+            // ✅ Use shared UUID from ChatHolder
+            socket = device.createRfcommSocketToServiceRecord(ChatHolder.APP_UUID);
 
-                adapter.cancelDiscovery();
-                socket.connect();
-                Log.d("BluetoothClient", "Connected to server!");
+            adapter.cancelDiscovery();
+            socket.connect();
+            Log.d("BluetoothClient", "Connected to server!");
 
-                // Get streams
-                inputStream = socket.getInputStream();
-                outputStream = socket.getOutputStream();
+            // Get streams
+            inputStream = socket.getInputStream();
+            outputStream = socket.getOutputStream();
 
-                // Notify listener
-                listener.onConnected(socket, inputStream, outputStream);
-
-            } catch (IOException e) {
-                Log.e("BluetoothClient", "Connection failed: " + e.getMessage(), e);
-                close();
-            }
-        }).start();
+            return socket;
+        } catch (IOException e) {
+            Log.e("BluetoothClient", "Connection failed: " + e.getMessage(), e);
+            close();
+            return null;
+        }
     }
 
     // Send message to server
@@ -70,7 +67,7 @@ public class BluetoothClient {
         }
     }
 
-    // Listener interface
+    // Listener interface (optional if you want async callbacks)
     public interface OnConnectedListener {
         void onConnected(BluetoothSocket socket, InputStream in, OutputStream out);
     }

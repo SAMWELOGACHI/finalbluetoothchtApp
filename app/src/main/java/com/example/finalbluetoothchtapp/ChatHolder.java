@@ -8,7 +8,7 @@ public class ChatHolder {
             UUID.fromString("6f58c0bb-2f6a-4f26-9b8b-7f2c9b6c9b11");
 
     // Global connection reference
-    private static ChatConnection connection;
+    static ChatConnection connection;
 
     // Optional: store connected device name
     private static String connectedDeviceName;

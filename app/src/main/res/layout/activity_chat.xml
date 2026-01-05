@@ -7,144 +7,73 @@
     android:background="@color/background_dark"
     android:padding="16dp">
 
-    <!-- Title -->
-    <TextView
-        android:id="@+id/tvTitle"
+    <!-- Back Button -->
+    <ImageView
+        android:id="@+id/btnBack"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Connect to Device"
+        android:src="@drawable/ic_arrow_back"
+        android:contentDescription="Back"
+        app:tint="@color/text_primary"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <!-- Chat Title -->
+    <TextView
+        android:id="@+id/tvChatTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Chat"
         android:textColor="@color/text_primary"
         android:textSize="20sp"
         android:textStyle="bold"
         android:drawablePadding="8dp"
         app:drawableStartCompat="@drawable/ic_bluetooth"
         app:drawableTint="@color/text_primary"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintStart_toEndOf="@id/btnBack"
+        app:layout_constraintTop_toTopOf="@id/btnBack"
+        app:layout_constraintBottom_toBottomOf="@id/btnBack"
+        android:layout_marginStart="12dp"/>
 
-    <!-- Menu Icon -->
-    <ImageView
-        android:id="@+id/btnMenu"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/ic_bluetooth"
-        android:contentDescription="Menu"
-        app:tint="@color/text_primary"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/tvTitle"
-        app:layout_constraintBottom_toBottomOf="@id/tvTitle"/>
-
-    <!-- Scanning Card -->
-    <androidx.cardview.widget.CardView
-        android:id="@+id/cvScanning"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:visibility="gone"
-        app:cardBackgroundColor="#1E3A8A"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="0dp"
-        app:layout_constraintTop_toBottomOf="@id/tvTitle">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:gravity="center_vertical">
-
-            <ProgressBar
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:indeterminate="true"
-                android:indeterminateTint="@color/primary_blue"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Scanning for nearby devices..."
-                android:textColor="@color/primary_blue"
-                android:layout_marginStart="16dp"
-                android:textStyle="bold"/>
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
-
-    <!-- Available Devices Label -->
-    <TextView
-        android:id="@+id/tvAvailableLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="AVAILABLE DEVICES"
-        android:textColor="@color/text_secondary"
-        android:textSize="12sp"
-        android:layout_marginTop="24dp"
-        app:layout_constraintTop_toBottomOf="@id/cvScanning"
-        app:layout_constraintStart_toStartOf="parent"/>
-
-    <!-- Device List -->
+    <!-- Messages List -->
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvDevices"
-        android:layout_width="match_parent"
+        android:id="@+id/rvMessages"
+        android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp"
-        app:layout_constraintTop_toBottomOf="@id/tvAvailableLabel"
-        app:layout_constraintBottom_toTopOf="@id/btnServer"
+        app:layout_constraintTop_toBottomOf="@id/btnBack"
+        app:layout_constraintBottom_toTopOf="@id/etMessage"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- Start Server Button -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnServer"
-        android:layout_width="match_parent"
+    <!-- Message Input -->
+    <EditText
+        android:id="@+id/etMessage"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Start Server"
-        android:padding="16dp"
-        app:cornerRadius="12dp"
-        app:icon="@drawable/ic_bluetooth"
-        app:iconGravity="textStart"
+        android:hint="Type a message"
+        android:textColor="@color/text_primary"
+        android:backgroundTint="@color/surface_dark"
+        android:padding="12dp"
+        android:textSize="14sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/btnSend"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
+    <!-- Send Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSend"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Send"
+        android:icon="@drawable/ic_send"
         android:backgroundTint="@color/primary_blue"
         android:textColor="@color/white"
-        app:layout_constraintBottom_toTopOf="@id/btnEnableBluetooth"/>
-
-    <!-- Enable Bluetooth Button -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnEnableBluetooth"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Enable Bluetooth"
-        android:padding="16dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
         app:cornerRadius="12dp"
-        app:icon="@drawable/ic_bluetooth"
         app:iconGravity="textStart"
-        android:backgroundTint="@color/primary_blue"
-        android:textColor="@color/white"
-        app:layout_constraintBottom_toTopOf="@id/btnScan"/>
-
-    <!-- Scan Button -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnScan"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Scan Again"
-        android:padding="16dp"
-        app:cornerRadius="12dp"
-        app:icon="@drawable/ic_refresh"
-        app:iconGravity="textStart"
-        android:backgroundTint="@color/primary_blue"
-        android:textColor="@color/white"
-        app:layout_constraintBottom_toTopOf="@id/btnDisconnect"/>
-
-    <!-- Disconnect Button -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnDisconnect"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Disconnect"
-        android:padding="16dp"
-        app:cornerRadius="12dp"
-        app:icon="@drawable/ic_bluetooth"
-        app:iconGravity="textStart"
-        android:backgroundTint="@color/accent_red"
-        android:textColor="@color/white"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
