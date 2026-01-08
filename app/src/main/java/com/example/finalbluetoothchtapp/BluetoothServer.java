@@ -11,15 +11,11 @@ import android.util.Log;
 import androidx.annotation.RequiresPermission;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 
 public class BluetoothServer extends Thread {
     private final BluetoothServerSocket serverSocket;
     private final Context context;
     private BluetoothSocket socket;
-    private InputStream inputStream;
-    private OutputStream outputStream;
 
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     public BluetoothServer(Context context) throws IOException {
@@ -36,11 +32,7 @@ public class BluetoothServer extends Thread {
             socket = serverSocket.accept(); // blocks until a client connects
             Log.d("BluetoothServer", "Client connected!");
 
-            // Get streams
-            inputStream = socket.getInputStream();
-            outputStream = socket.getOutputStream();
-
-            // Store connection globally if needed
+            // Store connection globally
             ChatHolder.connection = new ChatConnection(socket);
 
             // Launch ChatActivity
@@ -55,42 +47,13 @@ public class BluetoothServer extends Thread {
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(intent);
 
-            // Start reading messages
-            readMessages();
+            // We do NOT read messages here anymore.
+            // ChatActivity will read from ChatHolder.connection
 
         } catch (IOException e) {
             Log.e("BluetoothServer", "Error accepting connection", e);
             close();
         }
-    }
-
-    // Send message to client
-    public void sendMessage(String message) {
-        if (outputStream != null) {
-            try {
-                outputStream.write(message.getBytes());
-                outputStream.flush();
-            } catch (IOException e) {
-                Log.e("BluetoothServer", "Error sending message", e);
-            }
-        }
-    }
-
-    // Read incoming messages
-    private void readMessages() {
-        new Thread(() -> {
-            byte[] buffer = new byte[1024];
-            int bytes;
-            try {
-                while ((bytes = inputStream.read(buffer)) != -1) {
-                    String received = new String(buffer, 0, bytes);
-                    Log.d("BluetoothServer", "Received: " + received);
-                    // TODO: update UI with received message
-                }
-            } catch (IOException e) {
-                Log.e("BluetoothServer", "Error reading", e);
-            }
-        }).start();
     }
 
     // Close connection

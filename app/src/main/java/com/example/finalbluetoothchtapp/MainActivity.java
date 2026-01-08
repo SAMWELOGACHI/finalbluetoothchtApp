@@ -10,12 +10,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.provider.Settings;
 import android.view.View;
 import android.widget.Toast;
 
-import androidx.annotation.RequiresPermission;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -25,6 +29,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -37,8 +42,8 @@ public class MainActivity extends AppCompatActivity {
     private DeviceAdapter deviceAdapter;
     private RecyclerView rvDevices;
 
+    // Receiver to handle found devices
     private final BroadcastReceiver discoveryReceiver = new BroadcastReceiver() {
-        @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
@@ -53,7 +58,9 @@ public class MainActivity extends AppCompatActivity {
                 }
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 Toast.makeText(context, "Discovery finished", Toast.LENGTH_SHORT).show();
-                findViewById(R.id.cvScanning).setVisibility(View.GONE);
+                View cv = findViewById(R.id.cvScanning);
+                if (cv != null) cv.setVisibility(View.GONE);
+
                 try { unregisterReceiver(this); } catch (Exception ignored) {}
             }
         }
@@ -67,7 +74,6 @@ public class MainActivity extends AppCompatActivity {
         rvDevices = findViewById(R.id.rvDevices);
         rvDevices.setLayoutManager(new LinearLayoutManager(this));
 
-        // ✅ Pass click listener to adapter
         deviceAdapter = new DeviceAdapter(devices, this::connectToDevice);
         rvDevices.setAdapter(deviceAdapter);
 
@@ -76,47 +82,61 @@ public class MainActivity extends AppCompatActivity {
 
         ensurePermissions();
 
-        // ✅ Button listeners
-        findViewById(R.id.btnEnableBluetooth).setOnClickListener(v -> {
-            Toast.makeText(this, "Enable Bluetooth clicked", Toast.LENGTH_SHORT).show();
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                return;
-            }
-            enableBluetooth();
-        });
+        findViewById(R.id.btnEnableBluetooth).setOnClickListener(v -> enableBluetooth());
 
         findViewById(R.id.btnScan).setOnClickListener(v -> {
             Toast.makeText(this, "Scan clicked", Toast.LENGTH_SHORT).show();
             startDiscovery();
         });
 
-        findViewById(R.id.btnDisconnect).setOnClickListener(v -> {
-            Toast.makeText(this, "Disconnect clicked", Toast.LENGTH_SHORT).show();
-            disconnect();
-        });
+        findViewById(R.id.btnDisconnect).setOnClickListener(v -> disconnect());
 
-        findViewById(R.id.btnServer).setOnClickListener(v -> {
-            Toast.makeText(this, "Server clicked", Toast.LENGTH_SHORT).show();
-            startServer();
-        });
+        findViewById(R.id.btnServer).setOnClickListener(v -> startServer());
 
         if (bluetoothAdapter != null && !bluetoothAdapter.isEnabled()) {
             enableBluetooth();
+        } else {
+            showPairedDevices();
         }
     }
 
-    // ✅ Start Server
-    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+    private void showPairedDevices() {
+        if (bluetoothAdapter == null || !hasConnectPermission()) return;
+
+        try {
+            Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+            if (pairedDevices != null && !pairedDevices.isEmpty()) {
+                devices.clear();
+                devices.addAll(pairedDevices);
+                deviceAdapter.notifyDataSetChanged();
+            }
+        } catch (SecurityException e) {
+            Toast.makeText(this, "Permission required to show paired devices", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQ_PERMS) {
+            boolean allGranted = true;
+            for (int result : grantResults) {
+                if (result != PackageManager.PERMISSION_GRANTED) {
+                    allGranted = false;
+                    break;
+                }
+            }
+            if (allGranted && grantResults.length > 0) {
+                Toast.makeText(this, "Permissions granted.", Toast.LENGTH_SHORT).show();
+                showPairedDevices();
+            } else {
+                Toast.makeText(this, "Permissions denied. Bluetooth will not work.", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
     private void startServer() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT)
-                != PackageManager.PERMISSION_GRANTED) {
+        if (!hasConnectPermission()) {
             ensurePermissions();
             return;
         }
@@ -128,49 +148,58 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             Toast.makeText(this, "Server error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         } catch (SecurityException e) {
-            Toast.makeText(this, "Bluetooth server permission denied", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Bluetooth permission denied", Toast.LENGTH_SHORT).show();
         }
     }
 
-    // ✅ Connect to Device
     private void connectToDevice(BluetoothDevice device) {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT)
-                != PackageManager.PERMISSION_GRANTED) {
+        if (!hasConnectPermission()) {
             ensurePermissions();
             return;
         }
 
-        bluetoothAdapter.cancelDiscovery();
+        try {
+            bluetoothAdapter.cancelDiscovery();
+        } catch (SecurityException e) {
+            // permission issue
+        }
 
         new Thread(() -> {
-            BluetoothClient client = new BluetoothClient(device, bluetoothAdapter);
-            BluetoothSocket socket = client.connect();
+            try {
+                BluetoothClient client = new BluetoothClient(device, bluetoothAdapter);
+                BluetoothSocket socket = client.connect();
 
-            runOnUiThread(() -> {
-                if (socket != null) {
-                    bluetoothSocket = socket;
-                    Toast.makeText(this, "Connected to " + device.getName(), Toast.LENGTH_SHORT).show();
-
-                    Intent intent = new Intent(MainActivity.this, ChatActivity.class);
-                    intent.putExtra("device_name", device.getName());
-                    startActivity(intent);
-                } else {
-                    Toast.makeText(this, "Failed to connect", Toast.LENGTH_SHORT).show();
-                }
-            });
+                runOnUiThread(() -> {
+                    if (socket != null) {
+                        bluetoothSocket = socket;
+                        try {
+                            // Save connection globally
+                            ChatHolder.connection = new ChatConnection(socket);
+                            Toast.makeText(this, "Connected to " + device.getName(), Toast.LENGTH_SHORT).show();
+                            
+                            Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+                            intent.putExtra("device_name", device.getName());
+                            startActivity(intent);
+                        } catch (IOException e) {
+                            Toast.makeText(this, "Error creating connection", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(this, "Failed to connect", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            } catch (SecurityException e) {
+                runOnUiThread(() -> Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show());
+            }
         }).start();
     }
 
-    // ✅ Enable Bluetooth
-    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     private void enableBluetooth() {
         if (bluetoothAdapter == null) {
             Toast.makeText(this, "Bluetooth not supported", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT)
-                != PackageManager.PERMISSION_GRANTED) {
+        if (!hasConnectPermission()) {
             ensurePermissions();
             return;
         }
@@ -181,23 +210,35 @@ public class MainActivity extends AppCompatActivity {
                 startActivityForResult(enableBtIntent, REQ_ENABLE_BT);
             } else {
                 Toast.makeText(this, "Bluetooth already enabled", Toast.LENGTH_SHORT).show();
+                showPairedDevices();
             }
         } catch (SecurityException e) {
             Toast.makeText(this, "Bluetooth permission denied", Toast.LENGTH_SHORT).show();
         }
     }
 
-    // ✅ Start Discovery
-    @RequiresPermission(Manifest.permission.BLUETOOTH_SCAN)
+    // ✅ Start Discovery (FIXED: Increased Delay + Advertise check)
     private void startDiscovery() {
-        if (bluetoothAdapter == null) {
-            Toast.makeText(this, "Bluetooth not supported", Toast.LENGTH_SHORT).show();
-            return;
+        if (bluetoothAdapter == null) return;
+
+        // 1. Permission Check
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+                ensurePermissions();
+                return;
+            }
+        } else {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ensurePermissions();
+                return;
+            }
         }
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN)
-                != PackageManager.PERMISSION_GRANTED) {
-            ensurePermissions();
+        // 2. SYSTEM LOCATION SWITCH CHECK
+        if (!isLocationEnabled()) {
+            Toast.makeText(this, "Please enable Location/GPS to scan", Toast.LENGTH_LONG).show();
+            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            startActivity(intent);
             return;
         }
 
@@ -208,29 +249,43 @@ public class MainActivity extends AppCompatActivity {
             View cvScanning = findViewById(R.id.cvScanning);
             if (cvScanning != null) cvScanning.setVisibility(View.VISIBLE);
 
+            try { unregisterReceiver(discoveryReceiver); } catch (Exception ignored) {}
             IntentFilter filter = new IntentFilter();
             filter.addAction(BluetoothDevice.ACTION_FOUND);
             filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
             registerReceiver(discoveryReceiver, filter);
 
+            // 3. STOP & WAIT
             if (bluetoothAdapter.isDiscovering()) {
                 bluetoothAdapter.cancelDiscovery();
-                try { Thread.sleep(500); } catch (InterruptedException ignored) {}
             }
 
-            boolean ok = bluetoothAdapter.startDiscovery();
-            if (!ok) {
-                Toast.makeText(this, "Failed to start discovery", Toast.LENGTH_SHORT).show();
-                if (cvScanning != null) cvScanning.setVisibility(View.GONE);
-            } else {
-                Toast.makeText(this, "Scanning...", Toast.LENGTH_SHORT).show();
-            }
+            // CRITICAL FIX: Increased delay to 2000ms (2 seconds)
+            // Bluetooth hardware needs time to stop before starting again.
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                try {
+                    // Double check permission inside the delay
+                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED || Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+
+                        boolean ok = bluetoothAdapter.startDiscovery();
+
+                        if (!ok) {
+                            Toast.makeText(this, "Discovery failed. Restart App.", Toast.LENGTH_SHORT).show();
+                            if (cvScanning != null) cvScanning.setVisibility(View.GONE);
+                        } else {
+                            Toast.makeText(this, "Scanning...", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                } catch (SecurityException e) {
+                    // Ignore
+                }
+            }, 2000); // 2000ms delay
+
         } catch (SecurityException e) {
             Toast.makeText(this, "Bluetooth scan permission denied", Toast.LENGTH_SHORT).show();
         }
     }
 
-    // ✅ Disconnect
     private void disconnect() {
         try {
             if (bluetoothSocket != null) {
@@ -247,28 +302,48 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // ✅ Permission Helpers
-    private boolean hasScanPermissions() {
+    private boolean hasConnectPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            return ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED
-                    && ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED;
-        } else {
-            return ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+            return ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED;
         }
+        return true;
     }
 
+    private boolean isLocationEnabled() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            return true;
+        }
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+    }
+
+    // ✅ Permission Helpers (FIXED: Added BLUETOOTH_ADVERTISE for Android 12+)
     private void ensurePermissions() {
         List<String> perms = new ArrayList<>();
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED)
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
                 perms.add(Manifest.permission.BLUETOOTH_SCAN);
-            if (ContextCompat.checkSelfPermission(this,
-                    Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED)
+            }
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
                 perms.add(Manifest.permission.BLUETOOTH_CONNECT);
+            }
+            // CRITICAL FIX: Android 12 often requires this even if you aren't advertising
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_ADVERTISE) != PackageManager.PERMISSION_GRANTED) {
+                perms.add(Manifest.permission.BLUETOOTH_ADVERTISE);
+            }
+        } else {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                perms.add(Manifest.permission.ACCESS_FINE_LOCATION);
+            }
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                perms.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+            }
+        }
+
+        if (!perms.isEmpty()) {
+            ActivityCompat.requestPermissions(this, perms.toArray(new String[0]), REQ_PERMS);
         }
     }
 }

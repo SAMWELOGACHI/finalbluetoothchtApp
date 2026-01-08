@@ -8,14 +8,16 @@
 
     <!-- Modern Bluetooth permissions (Android 12+) -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"
-        android:usesPermissionFlags="neverForLocation" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
 
     <!-- Location permissions (needed for discovery on older Androids) -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
-    <uses-feature android:name="android.hardware.bluetooth" android:required="true" />
+    <uses-feature
+        android:name="android.hardware.bluetooth"
+        android:required="true" />
 
     <application
         android:allowBackup="true"
@@ -27,6 +29,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FinalbluetoothchtApp">
 
+        <!-- Only ONE declaration of MainActivity is here now -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -38,6 +41,6 @@
 
         <activity android:name=".ChatActivity" />
         <activity android:name=".ChatListActivity" />
-
     </application>
+
 </manifest>
