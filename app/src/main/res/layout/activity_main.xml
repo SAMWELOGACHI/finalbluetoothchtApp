@@ -13,8 +13,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Connect to Device"
+        android:gravity="center"
         android:textColor="@color/text_primary"
-        android:textSize="20sp"
+        android:textSize="32sp"
         android:textStyle="bold"
         android:drawablePadding="8dp"
         app:drawableStartCompat="@drawable/ic_bluetooth"
@@ -75,29 +76,34 @@
         android:layout_height="wrap_content"
         android:text="AVAILABLE DEVICES"
         android:textColor="@color/text_secondary"
-        android:textSize="12sp"
+        android:textSize="24sp"
         android:layout_marginTop="24dp"
         app:layout_constraintTop_toBottomOf="@id/cvScanning"
         app:layout_constraintStart_toStartOf="parent"/>
 
     <!-- Device List -->
+
+    <!-- Start Server Button -->
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvDevices"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp"
-        app:layout_constraintTop_toBottomOf="@id/tvAvailableLabel"
         app:layout_constraintBottom_toTopOf="@id/btnServer"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintTop_toBottomOf="@id/tvAvailableLabel"
+        app:layout_constraintVertical_bias="0.0" />
 
-    <!-- Start Server Button -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnServer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Start Server"
+        android:textSize="24sp"
         android:padding="16dp"
         app:cornerRadius="12dp"
         app:icon="@drawable/ic_bluetooth"
@@ -113,6 +119,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Enable Bluetooth"
+        android:textSize="24sp"
         android:padding="16dp"
         app:cornerRadius="12dp"
         app:icon="@drawable/ic_bluetooth"
@@ -128,6 +135,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Scan Again"
+        android:textSize="24sp"
         android:padding="16dp"
         app:cornerRadius="12dp"
         app:icon="@drawable/ic_refresh"
@@ -143,6 +151,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Disconnect"
+        android:textSize="24sp"
         android:padding="16dp"
         app:cornerRadius="12dp"
         app:icon="@drawable/ic_bluetooth"
