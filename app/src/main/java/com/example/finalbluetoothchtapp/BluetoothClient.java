@@ -26,24 +26,44 @@ public class BluetoothClient {
 
     @RequiresPermission(Manifest.permission.BLUETOOTH_SCAN)
     public BluetoothSocket connect() {
+        // Step 1: Try Secure RFCOMM
         try {
-            // ✅ Use shared UUID from ChatHolder
+            Log.d("BluetoothClient", "Attempting Secure RFCOMM connection...");
             socket = device.createRfcommSocketToServiceRecord(ChatHolder.APP_UUID);
-
             adapter.cancelDiscovery();
             socket.connect();
-            Log.d("BluetoothClient", "Connected to server!");
-
-            // Get streams
-            inputStream = socket.getInputStream();
-            outputStream = socket.getOutputStream();
-
-            return socket;
+            return initStreams();
         } catch (IOException e) {
-            Log.e("BluetoothClient", "Connection failed: " + e.getMessage(), e);
+            Log.w("BluetoothClient", "Secure connection failed, trying Insecure...", e);
+        }
+
+        // Step 2: Try Insecure RFCOMM (bypasses pairing on many devices)
+        try {
+            socket = device.createInsecureRfcommSocketToServiceRecord(ChatHolder.APP_UUID);
+            socket.connect();
+            return initStreams();
+        } catch (IOException e) {
+            Log.w("BluetoothClient", "Insecure connection failed, trying Reflection...", e);
+        }
+
+        // Step 3: Reflection Fallback (last resort)
+        try {
+            socket = (BluetoothSocket) device.getClass().getMethod("createRfcommSocket", new Class[] { int.class })
+                    .invoke(device, 1);
+            socket.connect();
+            return initStreams();
+        } catch (Exception e) {
+            Log.e("BluetoothClient", "All connection attempts failed: " + e.getMessage());
             close();
             return null;
         }
+    }
+
+    private BluetoothSocket initStreams() throws IOException {
+        Log.d("BluetoothClient", "Connected! Initializing streams...");
+        inputStream = socket.getInputStream();
+        outputStream = socket.getOutputStream();
+        return socket;
     }
 
     // Send message to server
@@ -61,7 +81,8 @@ public class BluetoothClient {
     // Close connection
     public void close() {
         try {
-            if (socket != null) socket.close();
+            if (socket != null)
+                socket.close();
         } catch (IOException e) {
             Log.e("BluetoothClient", "Error closing socket", e);
         }

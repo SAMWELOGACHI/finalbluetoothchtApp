@@ -2,16 +2,26 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <!-- Dark Theme Colors -->
-    <color name="background_dark">#0F172A</color>
-    <color name="surface_dark">#1E293B</color>
-    <color name="primary_blue">#3B82F6</color>
-    <color name="primary_blue_dark">#1E40AF</color> <!-- Added -->
-    <color name="text_primary">#F8FAFC</color>
+    <!-- Pro Theme Palette: Midnight & Electric -->
+    <color name="background_dark">#0A0F1E</color>
+    <color name="surface_dark">#151B2E</color>
+    <color name="surface_variant">#1E293B</color>
+
+    <color name="primary_pro">#4F46E5</color>
+    <color name="primary_pro_light">#818CF8</color>
+    <color name="secondary_pro">#06B6D4</color>
+
+    <color name="text_primary">#F1F5F9</color>
     <color name="text_secondary">#94A3B8</color>
-    <color name="bubble_sent">#3B82F6</color>
-    <color name="bubble_received">#334155</color>
+
+    <color name="bubble_sent">#4F46E5</color>
+    <color name="bubble_received">#1E293B</color>
+
     <color name="accent_green">#10B981</color>
-    <color name="accent_orange">#F59E0B</color>
-    <color name="accent_red">#EF4444</color> <!-- Added -->
+    <color name="accent_red">#EF4444</color>
+    <color name="accent_gold">#F59E0B</color>
+
+    <!-- Legacy Compatibility -->
+    <color name="primary_blue">#4F46E5</color>
+    <color name="primary_blue_dark">#3730A3</color>
 </resources>

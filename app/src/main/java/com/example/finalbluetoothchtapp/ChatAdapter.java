@@ -3,10 +3,13 @@ package com.example.finalbluetoothchtapp;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
 
 import java.util.List;
 
@@ -20,7 +23,6 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
 
     @Override
     public int getItemViewType(int position) {
-        // 0 = Me, 1 = Peer
         return messages.get(position).isMe() ? 0 : 1;
     }
 
@@ -40,7 +42,22 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull ChatViewHolder holder, int position) {
-        holder.txtMessage.setText(messages.get(position).getText());
+        Message message = messages.get(position);
+
+        if (message.isImage()) {
+            holder.txtMessage.setVisibility(View.GONE);
+            holder.ivImage.setVisibility(View.VISIBLE);
+            Glide.with(holder.itemView.getContext())
+                    .load(message.getImageUri())
+                    .into(holder.ivImage);
+        } else {
+            holder.ivImage.setVisibility(View.GONE);
+            holder.txtMessage.setVisibility(View.VISIBLE);
+            holder.txtMessage.setText(message.getText());
+        }
+
+        // Optional: formatting timestamp
+        // holder.txtTimestamp.setText(...)
     }
 
     @Override
@@ -50,10 +67,14 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
 
     static class ChatViewHolder extends RecyclerView.ViewHolder {
         TextView txtMessage;
+        ImageView ivImage;
+        TextView txtTimestamp;
 
         ChatViewHolder(View itemView) {
             super(itemView);
             txtMessage = itemView.findViewById(R.id.tvMessage);
+            ivImage = itemView.findViewById(R.id.ivImage);
+            txtTimestamp = itemView.findViewById(R.id.tvTimestamp);
         }
     }
 }
