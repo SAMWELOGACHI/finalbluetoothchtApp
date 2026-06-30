@@ -1,9 +1,9 @@
 package com.example.finalbluetoothchtapp;
 
 public class Message {
-    private final String text; // message content
-    private final String imageUri; // image URI (null if text)
-    private final String audioUri; // audio URI (null if not audio)
+    private String text; // message content
+    private String imageUri; // image URI (null if text)
+    private String audioUri; // audio URI (null if not audio)
     private final boolean isMe; // true if sent by "Me", false if from peer
     private final long timestamp; // time in milliseconds
     private String status; // "sent", "delivered", "read"
@@ -44,12 +44,21 @@ public class Message {
         return text;
     }
 
+    public void setText(String text) {
+        this.text = text;
+    }
+
     public String getImageUri() {
         return imageUri;
     }
 
     public String getAudioUri() {
         return audioUri;
+    }
+
+    public void clearMedia() {
+        this.imageUri = null;
+        this.audioUri = null;
     }
 
     public boolean isMe() {

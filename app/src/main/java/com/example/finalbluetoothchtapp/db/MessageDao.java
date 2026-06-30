@@ -28,4 +28,10 @@ public interface MessageDao {
 
     @Query("UPDATE messages SET reaction = :reaction WHERE timestamp = :timestamp")
     void updateMessageReaction(long timestamp, String reaction);
+
+    @Query("UPDATE messages SET content = :newContent WHERE timestamp = :timestamp")
+    void updateMessageContent(long timestamp, String newContent);
+
+    @Query("UPDATE messages SET content = :deletedPlaceholder, imageUri = null, audioUri = null WHERE timestamp = :timestamp")
+    void deleteMessageContent(long timestamp, String deletedPlaceholder);
 }

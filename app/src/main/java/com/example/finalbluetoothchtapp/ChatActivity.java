@@ -63,8 +63,9 @@ public class ChatActivity extends AppCompatActivity {
     private Handler recordingTimerHandler;
     private Runnable recordingTimerRunnable;
 
-    // Reply state
+    // Reply and Edit state
     private Message replyingToMessage = null;
+    private Message editingMessage = null;
 
     // Search
     private boolean isSearchMode = false;
@@ -246,6 +247,12 @@ public class ChatActivity extends AppCompatActivity {
                 case "profile":
                     handleProfile(json);
                     break;
+                case "edit":
+                    handleEdit(json);
+                    break;
+                case "delete":
+                    handleDelete(json);
+                    break;
                 case "ack":
                     handleAck(json);
                     break;
@@ -304,6 +311,45 @@ public class ChatActivity extends AppCompatActivity {
                 Message msg = messages.get(i);
                 if (msg.isMe() && msg.getTimestamp() == targetTimestamp) {
                     msg.setStatus(status);
+                    chatAdapter.notifyItemChanged(i);
+                    break;
+                }
+            }
+        });
+    }
+
+    private void handleEdit(JSONObject json) {
+        long targetTimestamp = json.optLong("targetTimestamp", 0);
+        String newContent = json.optString("newContent", "");
+
+        new Thread(() -> AppDatabase.getInstance(this).messageDao()
+                .updateMessageContent(targetTimestamp, newContent)).start();
+
+        runOnUiThread(() -> {
+            for (int i = 0; i < messages.size(); i++) {
+                Message msg = messages.get(i);
+                if (msg.getTimestamp() == targetTimestamp) {
+                    msg.setText(newContent);
+                    chatAdapter.notifyItemChanged(i);
+                    break;
+                }
+            }
+        });
+    }
+
+    private void handleDelete(JSONObject json) {
+        long targetTimestamp = json.optLong("targetTimestamp", 0);
+        String deletedPlaceholder = "🚫 This message was deleted";
+
+        new Thread(() -> AppDatabase.getInstance(this).messageDao()
+                .deleteMessageContent(targetTimestamp, deletedPlaceholder)).start();
+
+        runOnUiThread(() -> {
+            for (int i = 0; i < messages.size(); i++) {
+                Message msg = messages.get(i);
+                if (msg.getTimestamp() == targetTimestamp) {
+                    msg.setText(deletedPlaceholder);
+                    msg.clearMedia();
                     chatAdapter.notifyItemChanged(i);
                     break;
                 }
@@ -454,6 +500,22 @@ public class ChatActivity extends AppCompatActivity {
     private void sendTextMessage() {
         String text = input.getText().toString().trim();
         if (text.isEmpty() || connection == null) return;
+
+        if (editingMessage != null) {
+            String newContent = text + " (edited)";
+            editingMessage.setText(newContent);
+            int idx = messages.indexOf(editingMessage);
+            if (idx != -1) chatAdapter.notifyItemChanged(idx);
+
+            new Thread(() -> AppDatabase.getInstance(this).messageDao()
+                    .updateMessageContent(editingMessage.getTimestamp(), newContent)).start();
+
+            sendEditPacket(editingMessage.getTimestamp(), newContent);
+
+            editingMessage = null;
+            input.setText("");
+            return;
+        }
 
         long timestamp = System.currentTimeMillis();
         try {
@@ -710,31 +772,37 @@ public class ChatActivity extends AppCompatActivity {
 
     private void showMessageOptionsDialog(Message message, int position) {
         String[] emojis = {"👍", "❤️", "😂", "😮", "😢", "🙏"};
+        java.util.List<String> optionsList = new java.util.ArrayList<>();
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this, com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog);
-        builder.setTitle("Message Options");
+        boolean canEdit = message.isMe() && message.getText() != null && !message.getText().isEmpty() && !message.getText().startsWith("🚫");
+        boolean canDelete = message.isMe() && (message.getText() == null || !message.getText().startsWith("🚫"));
 
-        String[] options = new String[emojis.length + 1];
-        options[0] = "↩️  Reply";
-        for (int i = 0; i < emojis.length; i++) {
-            options[i + 1] = emojis[i] + "  React";
+        if (canDelete) optionsList.add("🗑️  Delete");
+        if (canEdit) optionsList.add("✏️  Edit");
+        optionsList.add("↩️  Reply");
+
+        for (String emoji : emojis) {
+            optionsList.add(emoji + "  React");
         }
 
+        String[] options = optionsList.toArray(new String[0]);
+
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(this, com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog);
+        builder.setTitle("Message Options");
         builder.setItems(options, (dialog, which) -> {
-            if (which == 0) {
-                // Reply
+            String selected = options[which];
+            if (selected.contains("Delete")) {
+                deleteMessage(message, position);
+            } else if (selected.contains("Edit")) {
+                setEditMode(message);
+            } else if (selected.contains("Reply")) {
                 setReplyTo(message);
-            } else {
-                // Reaction
-                String emoji = emojis[which - 1];
+            } else if (selected.contains("React")) {
+                String emoji = selected.substring(0, selected.indexOf(" "));
                 message.setReaction(emoji);
                 chatAdapter.notifyItemChanged(position);
-
-                // Persist in DB
                 new Thread(() -> AppDatabase.getInstance(this).messageDao()
                         .updateMessageReaction(message.getTimestamp(), emoji)).start();
-
-                // Send reaction to peer
                 sendReactionPacket(message.getTimestamp(), emoji);
             }
         });
@@ -765,6 +833,55 @@ public class ChatActivity extends AppCompatActivity {
         replyingToMessage = null;
         layoutReplyPreview.setVisibility(View.GONE);
         replyDivider.setVisibility(View.GONE);
+    }
+
+    // ========================
+    //  Edit & Delete
+    // ========================
+
+    private void deleteMessage(Message message, int position) {
+        String deletedPlaceholder = "🚫 This message was deleted";
+        message.setText(deletedPlaceholder);
+        message.clearMedia();
+        chatAdapter.notifyItemChanged(position);
+
+        new Thread(() -> AppDatabase.getInstance(this).messageDao()
+                .deleteMessageContent(message.getTimestamp(), deletedPlaceholder)).start();
+
+        sendDeletePacket(message.getTimestamp());
+    }
+
+    private void setEditMode(Message message) {
+        editingMessage = message;
+        input.setText(message.getText().replace(" (edited)", ""));
+        input.setSelection(input.getText().length());
+        input.requestFocus();
+        Toast.makeText(this, "Editing message...", Toast.LENGTH_SHORT).show();
+    }
+
+    private void sendEditPacket(long targetTimestamp, String newContent) {
+        if (connection == null) return;
+        new Thread(() -> {
+            try {
+                org.json.JSONObject json = new org.json.JSONObject();
+                json.put("type", "edit");
+                json.put("targetTimestamp", targetTimestamp);
+                json.put("newContent", newContent);
+                connection.writeLine(json.toString());
+            } catch (Exception ignored) {}
+        }).start();
+    }
+
+    private void sendDeletePacket(long targetTimestamp) {
+        if (connection == null) return;
+        new Thread(() -> {
+            try {
+                org.json.JSONObject json = new org.json.JSONObject();
+                json.put("type", "delete");
+                json.put("targetTimestamp", targetTimestamp);
+                connection.writeLine(json.toString());
+            } catch (Exception ignored) {}
+        }).start();
     }
 
     // ========================
