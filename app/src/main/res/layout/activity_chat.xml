@@ -4,14 +4,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_dark">
+    android:background="#0B141A">
 
     <!-- Header Section -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cvHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:cardBackgroundColor="@color/surface_dark"
+        app:cardBackgroundColor="#1F2C34"
         app:cardElevation="4dp"
         app:cardCornerRadius="0dp"
         app:layout_constraintTop_toTopOf="parent">
@@ -40,13 +40,60 @@
                 android:layout_height="wrap_content"
                 android:text="Chat"
                 android:textColor="@color/text_primary"
-                android:textSize="20sp"
+                android:textSize="18sp"
                 android:textStyle="bold"
                 android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
                 app:layout_constraintStart_toEndOf="@id/btnBack"
-                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/btnSearch"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent" />
+
+            <EditText
+                android:id="@+id/etSearch"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:hint="Search messages..."
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_secondary"
+                android:textSize="16sp"
+                android:background="@android:color/transparent"
+                android:imeOptions="actionSearch"
+                android:inputType="text"
+                android:singleLine="true"
+                android:visibility="gone"
+                android:layout_marginStart="8dp"
+                app:layout_constraintStart_toEndOf="@id/btnBack"
+                app:layout_constraintEnd_toStartOf="@id/btnCloseSearch"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"/>
+
+            <ImageView
+                android:id="@+id/btnSearch"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:padding="12dp"
+                android:src="@drawable/ic_search"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                app:tint="@color/text_primary"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:contentDescription="Search" />
+
+            <ImageView
+                android:id="@+id/btnCloseSearch"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:padding="12dp"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                app:tint="@color/text_primary"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:contentDescription="Close Search" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
@@ -58,7 +105,7 @@
         android:layout_height="0dp"
         android:clipToPadding="false"
         android:padding="16dp"
-        android:paddingBottom="80dp"
+        android:paddingBottom="88dp"
         app:layout_constraintTop_toBottomOf="@id/cvHeader"
         app:layout_constraintBottom_toBottomOf="parent" />
 
@@ -67,62 +114,169 @@
         android:id="@+id/cvInput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        app:cardBackgroundColor="@color/surface_variant"
-        app:cardCornerRadius="28dp"
+        android:layout_margin="12dp"
+        app:cardBackgroundColor="#202C33"
+        app:cardCornerRadius="24dp"
         app:cardElevation="8dp"
         app:strokeWidth="1dp"
-        app:strokeColor="#1E293B"
+        app:strokeColor="#2E3B4E"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingHorizontal="4dp"
-            android:paddingVertical="4dp">
+            android:orientation="vertical">
 
-            <ImageView
-                android:id="@+id/btnAttach"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:padding="12dp"
-                android:src="@drawable/ic_bluetooth"
-                app:tint="@color/primary_pro_light"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                android:contentDescription="Attach" />
-
-            <EditText
-                android:id="@+id/etMessage"
-                android:layout_width="0dp"
+            <!-- Reply Preview Container -->
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/layoutReplyPreview"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minHeight="48dp"
-                android:hint="Message..."
-                android:textColor="@color/text_primary"
-                android:textColorHint="@color/text_secondary"
-                android:background="@android:color/transparent"
-                android:paddingHorizontal="12dp"
-                android:textSize="16sp"
-                app:layout_constraintStart_toEndOf="@id/btnAttach"
-                app:layout_constraintEnd_toStartOf="@id/btnSend"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent" />
+                android:paddingHorizontal="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="4dp"
+                android:visibility="gone">
 
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/btnSend"
-                android:layout_width="wrap_content"
+                <View
+                    android:id="@+id/replyIndicator"
+                    android:layout_width="4dp"
+                    android:layout_height="0dp"
+                    android:background="@color/primary_pro"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"/>
+
+                <TextView
+                    android:id="@+id/tvReplySender"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="Alice"
+                    android:textColor="@color/primary_pro_light"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:layout_marginStart="8dp"
+                    app:layout_constraintStart_toEndOf="@id/replyIndicator"
+                    app:layout_constraintEnd_toStartOf="@id/btnCancelReply"
+                    app:layout_constraintTop_toTopOf="parent"/>
+
+                <TextView
+                    android:id="@+id/tvReplyText"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="Hello, how are you?"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:layout_marginStart="8dp"
+                    app:layout_constraintStart_toEndOf="@id/replyIndicator"
+                    app:layout_constraintEnd_toStartOf="@id/btnCancelReply"
+                    app:layout_constraintTop_toBottomOf="@id/tvReplySender"/>
+
+                <ImageView
+                    android:id="@+id/btnCancelReply"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@android:drawable/ic_menu_close_clear_cancel"
+                    app:tint="@color/text_secondary"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"/>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <!-- Divider (only visible when reply preview is active) -->
+            <View
+                android:id="@+id/replyDivider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#2E3B4E"
+                android:visibility="gone"/>
+
+            <!-- Main Input Row -->
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:fabSize="mini"
-                app:srcCompat="@drawable/ic_send"
-                app:tint="@color/white"
-                app:backgroundTint="@color/primary_pro"
-                app:elevation="0dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                android:contentDescription="Send" />
+                android:paddingHorizontal="4dp"
+                android:paddingVertical="4dp">
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+                <ImageView
+                    android:id="@+id/btnAttach"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:padding="12dp"
+                    android:src="@drawable/ic_image"
+                    app:tint="@color/text_secondary"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    android:contentDescription="Attach" />
+
+                <!-- Recording Status Overlay -->
+                <TextView
+                    android:id="@+id/tvRecordStatus"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:minHeight="48dp"
+                    android:gravity="center_vertical"
+                    android:text="🎙️ Recording 0:00"
+                    android:textColor="@color/accent_red"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:visibility="gone"
+                    android:paddingHorizontal="12dp"
+                    android:layout_marginEnd="52dp"
+                    app:layout_constraintStart_toEndOf="@id/btnAttach"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"/>
+
+                <EditText
+                    android:id="@+id/etMessage"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:minHeight="48dp"
+                    android:hint="Message"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary"
+                    android:background="@android:color/transparent"
+                    android:paddingHorizontal="12dp"
+                    android:textSize="16sp"
+                    android:layout_marginEnd="52dp"
+                    app:layout_constraintStart_toEndOf="@id/btnAttach"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btnSend"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:fabSize="mini"
+                    app:srcCompat="@drawable/ic_send"
+                    app:tint="@color/white"
+                    app:backgroundTint="#00A884"
+                    app:elevation="0dp"
+                    android:visibility="gone"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    android:contentDescription="Send" />
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/btnMic"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:fabSize="mini"
+                    app:srcCompat="@drawable/ic_mic"
+                    app:tint="@color/white"
+                    app:backgroundTint="#00A884"
+                    app:elevation="0dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    android:contentDescription="Record Voice" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

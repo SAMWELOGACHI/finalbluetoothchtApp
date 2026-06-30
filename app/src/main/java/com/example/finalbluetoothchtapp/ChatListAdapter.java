@@ -76,31 +76,50 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ChatVi
 
             viewOnlineStatus.setVisibility(chat.isOnline() ? View.VISIBLE : View.GONE);
 
-            // Avatar placeholder
-            ivAvatar.setImageResource(R.drawable.bg_avatar_placeholder);
+            // Load Avatar
+            if (chat.getAvatarBase64() != null && !chat.getAvatarBase64().isEmpty()) {
+                try {
+                    byte[] decodedString = android.util.Base64.decode(chat.getAvatarBase64(), android.util.Base64.DEFAULT);
+                    android.graphics.Bitmap decodedByte = android.graphics.BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                    com.bumptech.glide.Glide.with(itemView.getContext())
+                            .load(decodedByte)
+                            .circleCrop()
+                            .into(ivAvatar);
+                } catch (Exception e) {
+                    ivAvatar.setImageResource(R.drawable.ic_person);
+                }
+            } else {
+                ivAvatar.setImageResource(R.drawable.ic_person);
+            }
         }
     }
 
     // Simple data model for chat session
     public static class ChatSession {
         private final String name;
+        private final String address;
         private final String lastMessage;
         private final String time;
         private final int unreadCount;
         private final boolean isOnline;
+        private final String avatarBase64;
 
-        public ChatSession(String name, String lastMessage, String time, int unreadCount, boolean isOnline) {
+        public ChatSession(String name, String address, String lastMessage, String time, int unreadCount, boolean isOnline, String avatarBase64) {
             this.name = name;
+            this.address = address;
             this.lastMessage = lastMessage;
             this.time = time;
             this.unreadCount = unreadCount;
             this.isOnline = isOnline;
+            this.avatarBase64 = avatarBase64;
         }
 
         public String getName() { return name; }
+        public String getAddress() { return address; }
         public String getLastMessage() { return lastMessage; }
         public String getTime() { return time; }
         public int getUnreadCount() { return unreadCount; }
         public boolean isOnline() { return isOnline; }
+        public String getAvatarBase64() { return avatarBase64; }
     }
 }

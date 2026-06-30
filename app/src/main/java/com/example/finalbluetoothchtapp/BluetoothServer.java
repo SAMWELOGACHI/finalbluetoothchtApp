@@ -1,6 +1,7 @@
 package com.example.finalbluetoothchtapp;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
@@ -26,6 +27,7 @@ public class BluetoothServer extends Thread {
         serverSocket = adapter.listenUsingInsecureRfcommWithServiceRecord("ChatApp", ChatHolder.APP_UUID);
     }
 
+    @SuppressLint("MissingPermission")
     @Override
     public void run() {
         try {

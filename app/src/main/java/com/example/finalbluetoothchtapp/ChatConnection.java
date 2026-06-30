@@ -1,5 +1,6 @@
 package com.example.finalbluetoothchtapp;
 
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 
 import java.io.BufferedReader;
@@ -21,6 +22,10 @@ public class ChatConnection {
 
     public String readLine() throws IOException {
         return reader.readLine();
+    }
+
+    public BluetoothDevice getDevice() {
+        return socket.getRemoteDevice();
     }
 
     public void writeLine(String line) throws IOException {

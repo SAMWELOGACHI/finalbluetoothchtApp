@@ -1,11 +1,12 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Base.Theme.FinalbluetoothchtApp" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Pro Theme Customizations -->
+        <!-- WhatsApp Dark Theme Customizations -->
         <item name="colorPrimary">@color/primary_pro</item>
         <item name="colorSecondary">@color/secondary_pro</item>
         <item name="android:windowBackground">@color/background_dark</item>
-        <item name="android:statusBarColor">@color/background_dark</item>
+        <item name="android:statusBarColor">@color/surface_dark</item>
+        <item name="android:navigationBarColor">@color/background_dark</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="colorSurface">@color/surface_dark</item>
         <item name="colorSurfaceVariant">@color/surface_variant</item>
@@ -38,13 +39,13 @@
 
     <style name="ShapeAppearance.App.MessageSent" parent="">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">20dp</item>
+        <item name="cornerSize">16dp</item>
         <item name="cornerSizeBottomRight">4dp</item>
     </style>
 
     <style name="ShapeAppearance.App.MessageReceived" parent="">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">20dp</item>
+        <item name="cornerSize">16dp</item>
         <item name="cornerSizeBottomLeft">4dp</item>
     </style>
 </resources>

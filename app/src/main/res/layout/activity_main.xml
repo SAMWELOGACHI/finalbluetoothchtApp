@@ -16,14 +16,25 @@
         android:gravity="center_vertical"
         app:layout_constraintTop_toTopOf="parent">
 
+        <ImageView
+            android:id="@+id/btnBack"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:padding="12dp"
+            android:src="@drawable/ic_arrow_back"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="@color/text_primary"
+            android:contentDescription="Back"
+            android:layout_marginEnd="8dp" />
+
         <TextView
             android:id="@+id/tvTitle"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:text="Bluetooth Pro"
+            android:text="Discover"
             android:textColor="@color/text_primary"
-            android:textSize="34sp"
+            android:textSize="28sp"
             android:textStyle="bold"
             android:letterSpacing="-0.02" />
 

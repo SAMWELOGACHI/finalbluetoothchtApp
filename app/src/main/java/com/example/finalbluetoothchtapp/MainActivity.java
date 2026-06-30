@@ -95,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
 
         ensurePermissions();
 
+        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
         findViewById(R.id.btnEnableBluetooth).setOnClickListener(v -> enableBluetooth());
         findViewById(R.id.btnScan).setOnClickListener(v -> startDiscovery());
         findViewById(R.id.btnDisconnect).setOnClickListener(v -> disconnect());

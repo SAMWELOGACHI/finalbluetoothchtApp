@@ -4,16 +4,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingHorizontal="16dp"
+    android:paddingHorizontal="8dp"
     android:paddingVertical="4dp">
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cvMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:cardBackgroundColor="@color/bubble_received"
-        app:cardCornerRadius="20dp"
+        app:cardBackgroundColor="#202C33"
+        app:cardCornerRadius="16dp"
         app:cardElevation="1dp"
+        app:strokeWidth="0dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:shapeAppearanceOverlay="@style/ShapeAppearance.App.MessageReceived">
@@ -21,39 +22,159 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:maxWidth="260dp">
+
+            <!-- Replied Quote View -->
+            <LinearLayout
+                android:id="@+id/layoutQuote"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:visibility="gone"
+                android:background="#15FFFFFF"
+                android:layout_marginHorizontal="6dp"
+                android:layout_marginTop="6dp"
+                android:layout_marginBottom="2dp"
+                android:paddingEnd="6dp">
+
+                <View
+                    android:id="@+id/quoteIndicator"
+                    android:layout_width="4dp"
+                    android:layout_height="match_parent"
+                    android:background="#818CF8" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginStart="6dp"
+                    android:layout_marginVertical="4dp">
+
+                    <TextView
+                        android:id="@+id/tvQuoteSender"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Me"
+                        android:textColor="#818CF8"
+                        android:textSize="11sp"
+                        android:textStyle="bold"/>
+
+                    <TextView
+                        android:id="@+id/tvQuoteText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Quoted text"
+                        android:textColor="#D1D5DB"
+                        android:textSize="11sp"
+                        android:maxLines="2"
+                        android:ellipsize="end" />
+                </LinearLayout>
+            </LinearLayout>
 
             <ImageView
                 android:id="@+id/ivImage"
-                android:layout_width="260dp"
+                android:layout_width="240dp"
                 android:layout_height="wrap_content"
-                android:maxHeight="300dp"
+                android:maxHeight="240dp"
                 android:adjustViewBounds="true"
-                android:scaleType="centerInside"
+                android:scaleType="centerCrop"
                 android:visibility="gone" />
+
+            <!-- Audio Voice Note Player Row -->
+            <LinearLayout
+                android:id="@+id/layoutAudio"
+                android:layout_width="240dp"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="8dp"
+                android:gravity="center_vertical"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/btnPlayPause"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:src="@drawable/ic_play"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    app:tint="@color/text_primary"
+                    android:contentDescription="Play Audio" />
+
+                <SeekBar
+                    android:id="@+id/sbAudioProgress"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:max="100" />
+
+                <TextView
+                    android:id="@+id/tvAudioDuration"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0:00"
+                    android:textColor="#94A3B8"
+                    android:textSize="11sp"
+                    android:layout_marginEnd="4dp"/>
+
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/tvMessage"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingHorizontal="16dp"
-                android:paddingVertical="10dp"
+                android:paddingHorizontal="12dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="2dp"
                 android:text="Message content"
                 android:textColor="@color/text_primary"
-                android:textSize="16sp"
+                android:textSize="15sp"
                 android:maxWidth="260dp" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_gravity="end"
+                android:paddingHorizontal="8dp"
+                android:paddingBottom="4dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/tvTimestamp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="12:00 PM"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="9sp" />
+            </LinearLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <TextView
-        android:id="@+id/tvTimestamp"
+    <!-- Reaction Badge overlaying bottom left corner of CardView -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cvReaction"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:text="12:00 PM"
-        android:textColor="@color/text_secondary"
-        android:textSize="11sp"
+        android:visibility="gone"
+        app:cardCornerRadius="10dp"
+        app:cardBackgroundColor="#202C33"
+        app:cardElevation="2dp"
+        app:strokeWidth="1dp"
+        app:strokeColor="#2E3B4E"
+        app:layout_constraintBottom_toBottomOf="@id/cvMessage"
         app:layout_constraintStart_toStartOf="@id/cvMessage"
-        app:layout_constraintTop_toBottomOf="@id/cvMessage" />
+        android:layout_marginBottom="-8dp"
+        android:layout_marginStart="8dp">
+
+        <TextView
+            android:id="@+id/tvReaction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="❤️"
+            android:textSize="11sp"
+            android:paddingHorizontal="4dp"
+            android:paddingVertical="1dp"
+            android:textColor="@color/text_primary" />
+    </com.google.android.material.card.MaterialCardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

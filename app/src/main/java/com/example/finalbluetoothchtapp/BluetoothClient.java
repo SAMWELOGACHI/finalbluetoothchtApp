@@ -24,7 +24,7 @@ public class BluetoothClient {
         this.adapter = adapter;
     }
 
-    @RequiresPermission(Manifest.permission.BLUETOOTH_SCAN)
+    @RequiresPermission(allOf = {Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT})
     public BluetoothSocket connect() {
         // Step 1: Try Secure RFCOMM
         try {
